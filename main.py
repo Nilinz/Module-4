@@ -7,18 +7,18 @@ from datetime import datetime
 import socket
 import threading
 
-# Задаємо порти для HTTP та Socket серверів
+
 HTTP_PORT = 3000
 SOCKET_PORT = 5000
 
-# Функція для обробки запитів HTTP
+
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
-    # Маршрутизація HTTP запитів
+    
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
 
-        # Визначаємо MIME-тип
+        
         mime_type, _ = mimetypes.guess_type(path)
 
         if mime_type is None:
@@ -45,10 +45,10 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             username = parsed_data['username'][0]
             message = parsed_data['message'][0]
 
-            # Відправляємо дані на сокс-сервер
+            
             send_to_socket_server(username, message)
 
-            # Перенаправляємо користувача на сторінку message.html
+            
             self.send_response(303)
             self.send_header('Location', '/message.html')
             self.end_headers()
@@ -56,7 +56,7 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
             self.send_error(404, 'Not Found')
 
 
-# Функція для обробки даних і відправки їх на сокс-сервер
+
 def send_to_socket_server(username, message):
     now = datetime.now()
     timestamp = now.strftime('%Y-%m-%d %H:%M:%S.%f')
@@ -68,15 +68,15 @@ def send_to_socket_server(username, message):
         }
     }
 
-    # Відправляємо дані на сокс-сервер
+    
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.sendto(json.dumps(data).encode('utf-8'), ('localhost', SOCKET_PORT))
     except Exception as e:
-        print(f"Помилка при відправленні даних на сокс-сервер: {e}")
+        print(f"Помилка при відправленні даних на сокет-сервер: {e}")
 
 
-# Функція для запуску HTTP сервера
+
 def run_http_server():
     server_address = ('', HTTP_PORT)
     httpd = HTTPServer(server_address, MyHTTPRequestHandler)
@@ -84,14 +84,14 @@ def run_http_server():
     httpd.serve_forever()
 
 
-# Функція для обробки даних на сокс-сервері та зберігання їх у data.json
+
 def run_socket_server():
     data_file = 'storage/data.json'
 
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.bind(('localhost', SOCKET_PORT))
-            print(f"Сокс-сервер запущений на порту {SOCKET_PORT}")
+            print(f"Сокет-сервер запущений на порту {SOCKET_PORT}")
             while True:
                 data, _ = sock.recvfrom(1024)
                 received_data = json.loads(data.decode('utf-8'))
@@ -105,11 +105,11 @@ def run_socket_server():
                     json.dump(existing_data, file, indent=2)
 
     except Exception as e:
-        print(f"Помилка при роботі сокс-сервера: {e}")
+        print(f"Помилка при роботі сокет-сервера: {e}")
 
 
 if __name__ == '__main__':
-    # Запуск HTTP сервера та сокс-сервера у різних потоках
+    
     http_thread = threading.Thread(target=run_http_server)
     socket_thread = threading.Thread(target=run_socket_server)
 
